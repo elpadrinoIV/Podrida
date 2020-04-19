@@ -127,7 +127,7 @@ app.get('/game/:id', function (request, response) {
 
         .currentTurn {
             position: absolute;
-            top: 770;
+            top: 590;
             left: 800;
             width: 200px;
             height: 30px;
