@@ -9,13 +9,13 @@ var currentTurnToGuessBases = null;
 var currentTurnToPlay = null;
 
 var canvas = document.getElementById('canvas');
-canvas.height = 800;
+canvas.height = 620;
 canvas.width = 1000;
 var ctx = canvas.getContext('2d')
 
 var borderSeparation = 30;
 var separation = 30;
-var cardWidth = 100;
+var cardWidth = 80;
 var cardHeight = cardWidth * 1.525;
 
 var backgroundImage = null;
@@ -68,8 +68,6 @@ function loadGame(gId, playerId) {
         playerIndexes["top"] = (playerIdx + 2) % 4;
         playerIndexes["left"] = (playerIdx + 3) % 4;
 
-        console.log(playerIndexes);
-        console.log(game);
         setCurrentTurn(game);
         draw(game);
     });
@@ -236,8 +234,8 @@ loadImages(["/background.png"], function (imgs) {
 function drawBases(playersPool) {
     loadImages(["/empty_base.png", "/filled_base.png", "/extra_base.png"], function (imgs) {
         var baseSeparation = separation;
-        var baseWidth = 17;
-        var baseHeight = 17;
+        var baseWidth = 14;
+        var baseHeight = 14;
         var totalWidth = 0;
         var initialDx = 0;
         var initialDy = 0;
@@ -384,35 +382,36 @@ function drawCards(playersPool) {
 
 
     loadImages(["/gray_back.png"], function (imgs) {
+        var oponentCardSeparation = separation * 0.8;
         // Right Player
         var totalCards = playersPool.players[playerIndexes["right"]].cards.length
-        var totalWidth = separation * (totalCards - 1) + cardWidth;
+        var totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
         var initialDx = canvas.height / 2 - totalWidth / 2 - canvas.height / 2;
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.rotate(-Math.PI / 2);
         for (var i = 0; i < totalCards; i++) {
-            ctx.drawImage(imgs[0], i * separation + initialDx, canvas.width / 2 - cardHeight - borderSeparation, cardWidth, cardHeight);
+            ctx.drawImage(imgs[0], i * oponentCardSeparation + initialDx, canvas.width / 2 - cardHeight - borderSeparation, cardWidth, cardHeight);
         }
         ctx.restore();
 
         // Top player
         totalCards = playersPool.players[playerIndexes["top"]].cards.length
-        totalWidth = separation * (totalCards - 1) + cardWidth;
+        totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
         initialDx = canvas.width / 2 - totalWidth / 2;
         for (var i = 0; i < totalCards; i++) {
-            ctx.drawImage(imgs[0], i * separation + initialDx, borderSeparation, cardWidth, cardHeight);
+            ctx.drawImage(imgs[0], i * oponentCardSeparation + initialDx, borderSeparation, cardWidth, cardHeight);
         }
 
         // Left Player
         totalCards = playersPool.players[playerIndexes["left"]].cards.length
-        totalWidth = separation * (totalCards - 1) + cardWidth;
+        totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
         initialDx = canvas.height / 2 - totalWidth / 2 - canvas.height / 2;
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.rotate(Math.PI / 2);
         for (var i = 0; i < totalCards; i++) {
-            ctx.drawImage(imgs[0], i * separation + initialDx, canvas.width / 2 - cardHeight - borderSeparation, cardWidth, cardHeight);
+            ctx.drawImage(imgs[0], i * oponentCardSeparation + initialDx, canvas.width / 2 - cardHeight - borderSeparation, cardWidth, cardHeight);
         }
         ctx.restore();
     });
@@ -432,7 +431,7 @@ function drawPlayedCards(playersPool) {
     loadImages(images, function (imgs) {
         // Bottom player
         if (imgs[playerIndexes["bottom"]]) {
-            ctx.drawImage(imgs[playerIndexes["bottom"]], canvas.width / 2 - cardWidth / 2, canvas.height / 2 + borderSeparation * 0.5, cardWidth, cardHeight);
+            ctx.drawImage(imgs[playerIndexes["bottom"]], canvas.width / 2 - cardWidth / 2, canvas.height / 2 + borderSeparation * 0.0, cardWidth, cardHeight);
         }
 
         // Right player
@@ -442,7 +441,7 @@ function drawPlayedCards(playersPool) {
 
         // Top  player
         if (imgs[playerIndexes["top"]]) {
-            ctx.drawImage(imgs[playerIndexes["top"]], canvas.width / 2 - cardWidth / 2, canvas.height / 2 - cardHeight - borderSeparation * 0.5, cardWidth, cardHeight);
+            ctx.drawImage(imgs[playerIndexes["top"]], canvas.width / 2 - cardWidth / 2, canvas.height / 2 - cardHeight - borderSeparation * 0.0, cardWidth, cardHeight);
         }
 
         // Left player

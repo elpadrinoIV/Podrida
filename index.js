@@ -120,7 +120,7 @@ app.get('/game/:id', function (request, response) {
     <style> 
         canvas {
             width: 1000px;
-            height: 800px;
+            height: 620px;
             border: 5px solid black;
             background-color: green;
         }
