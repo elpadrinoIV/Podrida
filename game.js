@@ -64,7 +64,7 @@ class Game {
         } else {
             var lastRound = this.rounds[this.rounds.length - 1];
             roundCards = this.roundCardNumbers[this.rounds.length];
-            firstPlayer = this.playersPool.leftPlayer(lastRound.roundFirstPlayer);
+            firstPlayer = this.playersPool.rightPlayer(lastRound.roundFirstPlayer);
         }
 
 

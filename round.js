@@ -80,7 +80,7 @@ class Round {
 
     canGuessBases(p, bases) {
         // except for last player, the other players don't have any restrictions
-        if (this.playersPool.leftPlayer(p) != this.roundFirstPlayer) {
+        if (this.playersPool.rightPlayer(p) != this.roundFirstPlayer) {
             return true
         }
 
@@ -103,9 +103,9 @@ class Round {
         }
         console.log(p.name + " guessing " + bases)
         p.askedBases = bases;
-        var leftPlayer = this.playersPool.leftPlayer(p)
-        this.currentTurnToGuessBases = leftPlayer;
-        if (leftPlayer == this.roundFirstPlayer) {
+        var rightPlayer = this.playersPool.rightPlayer(p)
+        this.currentTurnToGuessBases = rightPlayer;
+        if (rightPlayer == this.roundFirstPlayer) {
             this.currentTurnToGuessBases = null;
             this.currentTurnToPlay = this.roundFirstPlayer;
             this.handFirstPlayer = this.roundFirstPlayer;
@@ -185,8 +185,8 @@ class Round {
 
         p.playCard(c);
 
-        var leftPlayer = this.playersPool.leftPlayer(p)
-        this.currentTurnToPlay = leftPlayer;
+        var rightPlayer = this.playersPool.rightPlayer(p)
+        this.currentTurnToPlay = rightPlayer;
     }
 
     endHand() {
@@ -241,22 +241,22 @@ class Round {
     // 
     handWinner() {
         var winner = this.handFirstPlayer;
-        var lp = this.playersPool.leftPlayer(this.handFirstPlayer)
-        while (lp != this.handFirstPlayer) {
+        var rp = this.playersPool.rightPlayer(this.handFirstPlayer)
+        while (rp != this.handFirstPlayer) {
             // If it is the same suit, the bigger the better
             // This applies in the case of original suit or triumph suit
-            if (lp.currentCard.suit == winner.currentCard.suit) {
-                if (lp.currentCard.greaterThan(winner.currentCard)) {
-                    winner = lp;
+            if (rp.currentCard.suit == winner.currentCard.suit) {
+                if (rp.currentCard.greaterThan(winner.currentCard)) {
+                    winner = rp;
                 }
             } else {
                 // If lp is not triumph, it doesn't have a chance to win
                 // This also works if there's no triumph
-                if (lp.currentCard.suit == this.triumph.suit) {
-                    winner = lp;
+                if (rp.currentCard.suit == this.triumph.suit) {
+                    winner = rp;
                 }
             }
-            lp = this.playersPool.leftPlayer(lp);
+            rp = this.playersPool.rightPlayer(rp);
         }
         return winner;
     }
