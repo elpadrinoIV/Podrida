@@ -1,3 +1,5 @@
+var card = require("./card.js")
+
 class Player {
     constructor(id, name) {
         this.id = id;
@@ -24,7 +26,7 @@ class Player {
                 } else {
                     return 0;
                 }
-            } else if (a.suit > b.suit) {
+            } else if (card.SuitOrder[a.suit] > card.SuitOrder[b.suit]) {
                 return 1;
             } else {
                 return -1;
