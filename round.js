@@ -133,7 +133,13 @@ class Round {
         }
 
         // at this point, he's not playing the hand's suit but he doesn't have
-        // any cards of the hand suit. If he wants to play triumph, then he can
+        // any cards of the hand suit.
+        // If this is a hand without triumph, then he can play anything
+        if (this.triumph == null) {
+            return true;
+        }
+
+        //If he wants to play triumph, then he can
         if (c.suit == this.triumph.suit) {
             return true;
         }
@@ -250,9 +256,8 @@ class Round {
                     winner = rp;
                 }
             } else {
-                // If lp is not triumph, it doesn't have a chance to win
-                // This also works if there's no triumph
-                if (rp.currentCard.suit == this.triumph.suit) {
+                // If rp is not triumph, it doesn't have a chance to win
+                if (this.triumph != null && rp.currentCard.suit == this.triumph.suit) {
                     winner = rp;
                 }
             }
