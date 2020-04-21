@@ -18,7 +18,8 @@ var separation = 30;
 var cardWidth = 80;
 var cardHeight = cardWidth * 1.525;
 
-var backgroundImage = null;
+var images = {};
+var imagesLoaded = false;
 
 //ctx.fillStyle = "#267272";
 //ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -32,6 +33,49 @@ var backgroundImage = null;
 // ctx.lineTo(canvas.width, canvas.height / 2);
 // ctx.stroke();
 
+function loadImages(sources, callback) {
+    var images = [];
+    var loadImages = 0;
+    var numImages = sources.length;
+    for (var iIdx in sources) {
+        if (sources[iIdx] == null) {
+            ++loadImages;
+        } else {
+            images[iIdx] = new Image();
+            images[iIdx].onload = function () {
+                if (++loadImages >= numImages) {
+                    callback(images);
+                }
+            };
+            images[iIdx].src = "/static/images/" + sources[iIdx]
+        }
+    }
+}
+
+function preloadImages() {
+    var imagesNames = [];
+    var cardNumbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+    var cardClubs = ["C", "H", "D", "S"];
+    for (var ccIdx in cardClubs) {
+        for (var cnIdx in cardNumbers) {
+            imagesNames.push(cardNumbers[cnIdx] + cardClubs[ccIdx] + ".png");
+        }
+    }
+    imagesNames.push("background.png");
+    imagesNames.push("gray_back.png");
+    imagesNames.push("empty_base.png", "filled_base.png", "extra_base.png");
+
+    loadImages(imagesNames, function (imagesResources) {
+        for (var iIdx in imagesResources) {
+            images[imagesNames[iIdx]] = imagesResources[iIdx];
+        }
+        imagesLoaded = true;
+    });
+}
+
+
+preloadImages();
+
 function loadGame(gId, playerId) {
     gameId = gId;
     playerId = playerId;
@@ -43,6 +87,7 @@ function loadGame(gId, playerId) {
             name: playerId
         }
     });
+
 
     socket.on('warnMessage', function (data) {
         console.log("Warn message for Game: " + data.gameId + "| PlayerId: " + data.playerId + "| Msg: " + data.message);
@@ -146,27 +191,17 @@ canvas.addEventListener('click', function (event) {
     }
 });
 
-function loadImages(sources, callback) {
-    var images = [];
-    var loadImages = 0;
-    var numImages = sources.length;
-    for (var iIdx in sources) {
-        if (sources[iIdx] == null) {
-            ++loadImages;
-        } else {
-            images[iIdx] = new Image();
-            images[iIdx].onload = function () {
-                if (++loadImages >= numImages) {
-                    callback(images);
-                }
-            };
-            images[iIdx].src = "/static/images/" + sources[iIdx]
-        }
-    }
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function draw(game) {
-    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+async function draw(game) {
+    while (!imagesLoaded) {
+        console.log("Waiting for images to be loaded");
+        await sleep(1000);
+    }
+    console.log("All images loaded")
+    ctx.drawImage(images['background.png'], 0, 0, canvas.width, canvas.height);
 
     drawPlayers(game.playersPool);
     drawBases(game.playersPool);
@@ -226,241 +261,213 @@ function drawPlayers(playersPool) {
     ctx.restore();
 }
 
-loadImages(["/background.png"], function (imgs) {
-    ctx.drawImage(imgs[0], 0, 0, canvas.width, canvas.height);
-    backgroundImage = imgs[0];
-});
-
 function drawBases(playersPool) {
-    loadImages(["/empty_base.png", "/filled_base.png", "/extra_base.png"], function (imgs) {
-        var baseSeparation = separation;
-        var baseWidth = 14;
-        var baseHeight = 14;
-        var totalWidth = 0;
-        var initialDx = 0;
-        var initialDy = 0;
-        var player = null;
+    var baseSeparation = separation;
+    var baseWidth = 14;
+    var baseHeight = 14;
+    var totalWidth = 0;
+    var initialDx = 0;
+    var initialDy = 0;
+    var player = null;
 
-        // Bottom player
-        player = playersPool.players[playerIndexes["bottom"]];
-        if (player.doneBases > player.askedBases) {
-            totalWidth = baseSeparation * player.doneBases;
-        } else {
-            totalWidth = baseSeparation * player.askedBases;
-        }
+    // Bottom player
+    player = playersPool.players[playerIndexes["bottom"]];
+    if (player.doneBases > player.askedBases) {
+        totalWidth = baseSeparation * player.doneBases;
+    } else {
+        totalWidth = baseSeparation * player.askedBases;
+    }
 
-        initialDx = canvas.width / 2 - totalWidth / 2;
-        initialDy = canvas.height / 2 - totalWidth / 2;
+    initialDx = canvas.width / 2 - totalWidth / 2;
+    initialDy = canvas.height / 2 - totalWidth / 2;
 
-        if (player.doneBases > player.askedBases) {
-            for (var i = 0; i < player.doneBases; i++) {
-                var img = imgs[1];
-                if (i >= player.askedBases) {
-                    img = imgs[2];
-                }
-                ctx.drawImage(img, i * separation + initialDx, canvas.height - cardHeight - borderSeparation * 2, baseWidth, baseHeight);
+    if (player.doneBases > player.askedBases) {
+        for (var i = 0; i < player.doneBases; i++) {
+            var img = images['filled_base.png'];
+            if (i >= player.askedBases) {
+                img = images['extra_base.png'];
             }
-        } else {
-            for (var i = 0; i < player.askedBases; i++) {
-                var img = imgs[0];
-                if (i < player.doneBases) {
-                    img = imgs[1];
-                }
-                ctx.drawImage(img, i * separation + initialDx, canvas.height - cardHeight - borderSeparation * 2, baseWidth, baseHeight);
-            }
+            ctx.drawImage(img, i * separation + initialDx, canvas.height - cardHeight - borderSeparation * 2, baseWidth, baseHeight);
         }
-
-        // Right player
-        player = playersPool.players[playerIndexes["right"]];
-        if (player.doneBases > player.askedBases) {
-            totalWidth = baseSeparation * player.doneBases;
-        } else {
-            totalWidth = baseSeparation * player.askedBases;
-        }
-
-        initialDx = canvas.width / 2 - totalWidth / 2;
-        initialDy = canvas.height / 2 - totalWidth / 2;
-
-        if (player.doneBases > player.askedBases) {
-            for (var i = 0; i < player.doneBases; i++) {
-                var img = imgs[1];
-                if (i >= player.askedBases) {
-                    img = imgs[2];
-                }
-                ctx.drawImage(img, canvas.width - borderSeparation - cardHeight - borderSeparation, i * separation + initialDy, baseWidth, baseHeight);
+    } else {
+        for (var i = 0; i < player.askedBases; i++) {
+            var img = images['empty_base.png'];
+            if (i < player.doneBases) {
+                img = images['filled_base.png'];
             }
-        } else {
-            for (var i = 0; i < player.askedBases; i++) {
-                var img = imgs[0];
-                if (i < player.doneBases) {
-                    img = imgs[1];
-                }
-                ctx.drawImage(img, canvas.width - borderSeparation - cardHeight - borderSeparation, i * separation + initialDy, baseWidth, baseHeight);
-            }
+            ctx.drawImage(img, i * separation + initialDx, canvas.height - cardHeight - borderSeparation * 2, baseWidth, baseHeight);
         }
+    }
 
-        // Top player
-        player = playersPool.players[playerIndexes["top"]];
-        if (player.doneBases > player.askedBases) {
-            totalWidth = baseSeparation * player.doneBases;
-        } else {
-            totalWidth = baseSeparation * player.askedBases;
-        }
+    // Right player
+    player = playersPool.players[playerIndexes["right"]];
+    if (player.doneBases > player.askedBases) {
+        totalWidth = baseSeparation * player.doneBases;
+    } else {
+        totalWidth = baseSeparation * player.askedBases;
+    }
 
-        initialDx = canvas.width / 2 - totalWidth / 2;
-        initialDy = canvas.height / 2 - totalWidth / 2;
+    initialDx = canvas.width / 2 - totalWidth / 2;
+    initialDy = canvas.height / 2 - totalWidth / 2;
 
-        if (player.doneBases > player.askedBases) {
-            for (var i = 0; i < player.doneBases; i++) {
-                var img = imgs[1];
-                if (i >= player.askedBases) {
-                    img = imgs[2];
-                }
-                ctx.drawImage(img, i * separation + initialDx, borderSeparation + cardHeight + borderSeparation / 2, baseWidth, baseHeight);
+    if (player.doneBases > player.askedBases) {
+        for (var i = 0; i < player.doneBases; i++) {
+            var img = images['filled_base.png'];
+            if (i >= player.askedBases) {
+                img = images['extra_base.png'];
             }
-        } else {
-            for (var i = 0; i < player.askedBases; i++) {
-                var img = imgs[0];
-                if (i < player.doneBases) {
-                    img = imgs[1];
-                }
-                ctx.drawImage(img, i * separation + initialDx, borderSeparation + cardHeight + borderSeparation / 2, baseWidth, baseHeight);
-            }
+            ctx.drawImage(img, canvas.width - borderSeparation - cardHeight - borderSeparation, i * separation + initialDy, baseWidth, baseHeight);
         }
-
-        // Left player
-        player = playersPool.players[playerIndexes["left"]];
-        if (player.doneBases > player.askedBases) {
-            totalWidth = baseSeparation * player.doneBases;
-        } else {
-            totalWidth = baseSeparation * player.askedBases;
-        }
-
-        initialDx = canvas.width / 2 - totalWidth / 2;
-        initialDy = canvas.height / 2 - totalWidth / 2;
-
-        if (player.doneBases > player.askedBases) {
-            for (var i = 0; i < player.doneBases; i++) {
-                var img = imgs[1];
-                if (i >= player.askedBases) {
-                    img = imgs[2];
-                }
-                ctx.drawImage(img, borderSeparation + cardHeight + borderSeparation, i * separation + initialDy, baseWidth, baseHeight);
+    } else {
+        for (var i = 0; i < player.askedBases; i++) {
+            var img = images['empty_base.png'];
+            if (i < player.doneBases) {
+                img = images['filled_base.png'];
             }
-        } else {
-            for (var i = 0; i < player.askedBases; i++) {
-                var img = imgs[0];
-                if (i < player.doneBases) {
-                    img = imgs[1];
-                }
-                ctx.drawImage(img, borderSeparation + cardHeight + borderSeparation, i * separation + initialDy, baseWidth, baseHeight);
-            }
+            ctx.drawImage(img, canvas.width - borderSeparation - cardHeight - borderSeparation, i * separation + initialDy, baseWidth, baseHeight);
         }
-    });
+    }
+
+    // Top player
+    player = playersPool.players[playerIndexes["top"]];
+    if (player.doneBases > player.askedBases) {
+        totalWidth = baseSeparation * player.doneBases;
+    } else {
+        totalWidth = baseSeparation * player.askedBases;
+    }
+
+    initialDx = canvas.width / 2 - totalWidth / 2;
+    initialDy = canvas.height / 2 - totalWidth / 2;
+
+    if (player.doneBases > player.askedBases) {
+        for (var i = 0; i < player.doneBases; i++) {
+            var img = images["filled_base.png"];
+            if (i >= player.askedBases) {
+                img = images["extra_base.png"];
+            }
+            ctx.drawImage(img, i * separation + initialDx, borderSeparation + cardHeight + borderSeparation / 2, baseWidth, baseHeight);
+        }
+    } else {
+        for (var i = 0; i < player.askedBases; i++) {
+            var img = images["empty_base.png"];
+            if (i < player.doneBases) {
+                img = images["filled_base.png"];
+            }
+            ctx.drawImage(img, i * separation + initialDx, borderSeparation + cardHeight + borderSeparation / 2, baseWidth, baseHeight);
+        }
+    }
+
+    // Left player
+    player = playersPool.players[playerIndexes["left"]];
+    if (player.doneBases > player.askedBases) {
+        totalWidth = baseSeparation * player.doneBases;
+    } else {
+        totalWidth = baseSeparation * player.askedBases;
+    }
+
+    initialDx = canvas.width / 2 - totalWidth / 2;
+    initialDy = canvas.height / 2 - totalWidth / 2;
+
+    if (player.doneBases > player.askedBases) {
+        for (var i = 0; i < player.doneBases; i++) {
+            var img = images["filled_base.png"];
+            if (i >= player.askedBases) {
+                img = images["extra_base.png"];
+            }
+            ctx.drawImage(img, borderSeparation + cardHeight + borderSeparation, i * separation + initialDy, baseWidth, baseHeight);
+        }
+    } else {
+        for (var i = 0; i < player.askedBases; i++) {
+            var img = images["empty_base.png"];
+            if (i < player.doneBases) {
+                img = images["filled_base.png"];
+            }
+            ctx.drawImage(img, borderSeparation + cardHeight + borderSeparation, i * separation + initialDy, baseWidth, baseHeight);
+        }
+    }
+
 }
 
 
 function drawCards(playersPool) {
-    var images = [];
 
     // Current player
     var player = playersPool.players[playerIndexes["bottom"]];
+
+    var totalWidth = separation * (player.cards.length - 1) + cardWidth;
+    var initialDx = canvas.width / 2 - totalWidth / 2;
+
     for (var cIdx in player.cards) {
-        images.push(player.cards[cIdx].imageName);
+        var img = images[player.cards[cIdx].imageName];
+        ctx.drawImage(images[player.cards[cIdx].imageName], cIdx * separation + initialDx, canvas.height - cardHeight - borderSeparation, cardWidth, cardHeight);
     }
 
-    loadImages(images, function (imgs) {
-        console.log("All cards loaded")
+    var oponentCardSeparation = separation * 0.8;
+    // Right Player
+    var totalCards = playersPool.players[playerIndexes["right"]].cards.length
+    var totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
+    var initialDx = canvas.height / 2 - totalWidth / 2 - canvas.height / 2;
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(-Math.PI / 2);
+    for (var i = 0; i < totalCards; i++) {
+        ctx.drawImage(images["gray_back.png"], i * oponentCardSeparation + initialDx, canvas.width / 2 - cardHeight - borderSeparation, cardWidth, cardHeight);
+    }
+    ctx.restore();
 
-        var totalWidth = separation * (imgs.length - 1) + cardWidth;
-        var initialDx = canvas.width / 2 - totalWidth / 2;
+    // Top player
+    totalCards = playersPool.players[playerIndexes["top"]].cards.length
+    totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
+    initialDx = canvas.width / 2 - totalWidth / 2;
+    for (var i = 0; i < totalCards; i++) {
+        ctx.drawImage(images["gray_back.png"], i * oponentCardSeparation + initialDx, borderSeparation, cardWidth, cardHeight);
+    }
 
-        for (var iIdx in images) {
-            ctx.drawImage(imgs[iIdx], iIdx * separation + initialDx, canvas.height - cardHeight - borderSeparation, cardWidth, cardHeight);
-        }
-    })
+    // Left Player
+    totalCards = playersPool.players[playerIndexes["left"]].cards.length
+    totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
+    initialDx = canvas.height / 2 - totalWidth / 2 - canvas.height / 2;
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    for (var i = 0; i < totalCards; i++) {
+        ctx.drawImage(images["gray_back.png"], i * oponentCardSeparation + initialDx, canvas.width / 2 - cardHeight - borderSeparation, cardWidth, cardHeight);
+    }
+    ctx.restore();
 
-
-    loadImages(["/gray_back.png"], function (imgs) {
-        var oponentCardSeparation = separation * 0.8;
-        // Right Player
-        var totalCards = playersPool.players[playerIndexes["right"]].cards.length
-        var totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
-        var initialDx = canvas.height / 2 - totalWidth / 2 - canvas.height / 2;
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(-Math.PI / 2);
-        for (var i = 0; i < totalCards; i++) {
-            ctx.drawImage(imgs[0], i * oponentCardSeparation + initialDx, canvas.width / 2 - cardHeight - borderSeparation, cardWidth, cardHeight);
-        }
-        ctx.restore();
-
-        // Top player
-        totalCards = playersPool.players[playerIndexes["top"]].cards.length
-        totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
-        initialDx = canvas.width / 2 - totalWidth / 2;
-        for (var i = 0; i < totalCards; i++) {
-            ctx.drawImage(imgs[0], i * oponentCardSeparation + initialDx, borderSeparation, cardWidth, cardHeight);
-        }
-
-        // Left Player
-        totalCards = playersPool.players[playerIndexes["left"]].cards.length
-        totalWidth = oponentCardSeparation * (totalCards - 1) + cardWidth;
-        initialDx = canvas.height / 2 - totalWidth / 2 - canvas.height / 2;
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(Math.PI / 2);
-        for (var i = 0; i < totalCards; i++) {
-            ctx.drawImage(imgs[0], i * oponentCardSeparation + initialDx, canvas.width / 2 - cardHeight - borderSeparation, cardWidth, cardHeight);
-        }
-        ctx.restore();
-    });
 }
 
 function drawPlayedCards(playersPool) {
-    var images = [];
-    for (var i in playersPool.players) {
-        if (playersPool.players[i].currentCard) {
-            images.push(playersPool.players[i].currentCard.imageName)
-        } else {
-            images.push(null);
-        }
+    // Bottom player
 
+    if (playersPool.players[playerIndexes["bottom"]].currentCard) {
+        ctx.drawImage(images[playersPool.players[playerIndexes["bottom"]].currentCard.imageName], canvas.width / 2 - cardWidth / 2, canvas.height / 2 + borderSeparation * 0.0, cardWidth, cardHeight);
     }
 
-    loadImages(images, function (imgs) {
-        // Bottom player
-        if (imgs[playerIndexes["bottom"]]) {
-            ctx.drawImage(imgs[playerIndexes["bottom"]], canvas.width / 2 - cardWidth / 2, canvas.height / 2 + borderSeparation * 0.0, cardWidth, cardHeight);
-        }
+    // Right player
+    if (playersPool.players[playerIndexes["right"]].currentCard) {
+        ctx.drawImage(images[playersPool.players[playerIndexes["right"]].currentCard.imageName], canvas.width / 2 + cardWidth, canvas.height / 2 - cardHeight / 2, cardWidth, cardHeight);
+    }
 
-        // Right player
-        if (imgs[playerIndexes["right"]]) {
-            ctx.drawImage(imgs[playerIndexes["right"]], canvas.width / 2 + cardWidth, canvas.height / 2 - cardHeight / 2, cardWidth, cardHeight);
-        }
+    // Top  player
+    if (playersPool.players[playerIndexes["top"]].currentCard) {
+        ctx.drawImage(images[playersPool.players[playerIndexes["top"]].currentCard.imageName], canvas.width / 2 - cardWidth / 2, canvas.height / 2 - cardHeight - borderSeparation * 0.0, cardWidth, cardHeight);
+    }
 
-        // Top  player
-        if (imgs[playerIndexes["top"]]) {
-            ctx.drawImage(imgs[playerIndexes["top"]], canvas.width / 2 - cardWidth / 2, canvas.height / 2 - cardHeight - borderSeparation * 0.0, cardWidth, cardHeight);
-        }
-
-        // Left player
-        if (imgs[playerIndexes["left"]]) {
-            ctx.drawImage(imgs[playerIndexes["left"]], canvas.width / 2 - cardWidth * 2, canvas.height / 2 - cardHeight / 2, cardWidth, cardHeight);
-        }
-    });
+    // Left player
+    if (playersPool.players[playerIndexes["left"]].currentCard) {
+        ctx.drawImage(images[playersPool.players[playerIndexes["left"]].currentCard.imageName], canvas.width / 2 - cardWidth * 2, canvas.height / 2 - cardHeight / 2, cardWidth, cardHeight);
+    }
 }
 
 
-function drawTriumph(triumph) {
-    var images = [triumph.imageName, "/gray_back.png"];
 
-    loadImages(images, function (imgs) {
-        for (var i = 1; i < 5; i++) {
-            ctx.drawImage(imgs[1], borderSeparation / 2 - (5 - i), canvas.height - cardHeight - borderSeparation / 2 + (5 - i), cardWidth, cardHeight);
-        }
-        ctx.drawImage(imgs[0], borderSeparation / 2, canvas.height - cardHeight - borderSeparation / 2, cardWidth, cardHeight);
-    });
+function drawTriumph(triumph) {
+    for (var i = 1; i < 5; i++) {
+        ctx.drawImage(images['gray_back.png'], borderSeparation / 2 - (5 - i), canvas.height - cardHeight - borderSeparation / 2 + (5 - i), cardWidth, cardHeight);
+    }
+    ctx.drawImage(images[triumph.imageName], borderSeparation / 2, canvas.height - cardHeight - borderSeparation / 2, cardWidth, cardHeight);
+
 }
 
 function guessBases() {
