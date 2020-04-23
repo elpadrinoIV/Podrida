@@ -7,6 +7,7 @@ var playerIndexes = {};
 
 var currentTurnToGuessBases = null;
 var currentTurnToPlay = null;
+var handFirstPlayer = null;
 
 var canvas = document.getElementById('canvas');
 canvas.height = 620;
@@ -113,6 +114,7 @@ function loadGame(gId, playerId) {
         playerIndexes["top"] = (playerIdx + 2) % 4;
         playerIndexes["left"] = (playerIdx + 3) % 4;
 
+        handFirstPlayer = game.rounds[game.rounds.length - 1].handFirstPlayer;
         setCurrentTurn(game);
         draw(game);
     });
@@ -130,6 +132,7 @@ function loadGame(gId, playerId) {
     socket.on('handDone', function (data) {
         console.log("Hand done");
         currentTurnToPlay = data.currentTurnToPlay;
+        handFirstPlayer = data.handFirstPlayer;
         draw(data.game);
     });
 
@@ -137,6 +140,7 @@ function loadGame(gId, playerId) {
         console.log("Round done");
         currentTurnToGuessBases = data.currentTurnToGuessBases;
         currentTurnToPlay = data.currentTurnToPlay;
+        handFirstPlayer = data.handFirstPlayer;
         draw(data.game);
     });
 
@@ -147,6 +151,9 @@ function loadGame(gId, playerId) {
         currentTurnToPlay = data.currentTurnToPlay;
         draw(data.game);
     });
+}
+function setHandFirstPlayer(game) {
+    handFirstPlayer = game.rounds[game.rounds.length - 1].handFirstPlayer;
 }
 
 function setCurrentTurn(game) {
@@ -201,6 +208,7 @@ async function draw(game) {
         await sleep(1000);
     }
     console.log("All images loaded")
+    console.log(game)
     ctx.drawImage(images['background.png'], 0, 0, canvas.width, canvas.height);
 
     drawPlayers(game.playersPool);
@@ -225,7 +233,6 @@ function drawCurrentTurn() {
     }
 }
 
-
 function drawCurrentTurnName(name) {
     document.getElementById("currentTurn").innerHTML = "Turno: " + name;
 }
@@ -242,22 +249,38 @@ function drawPlayers(playersPool) {
     ctx.textAlign = "center"
 
     // bottom
-    ctx.fillText(playersPool.players[playerIndexes["bottom"]].name, canvas.width / 2, canvas.height - borderSeparation + 25);
+    var name = playersPool.players[playerIndexes["bottom"]].name;
+    if (handFirstPlayer && playersPool.players[playerIndexes["bottom"]].id == handFirstPlayer.id) {
+        name = "-->  " + name + "  <--";
+    }
+    ctx.fillText(name, canvas.width / 2, canvas.height - borderSeparation + 25);
 
     // right
+    name = playersPool.players[playerIndexes["right"]].name;
+    if (handFirstPlayer && playersPool.players[playerIndexes["right"]].id == handFirstPlayer.id) {
+        name = "-->  " + name + "  <--";
+    }
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText(playersPool.players[playerIndexes["right"]].name, 0, canvas.width / 2 - borderSeparation + 25);
+    ctx.fillText(name, 0, canvas.width / 2 - borderSeparation + 25);
     ctx.restore();
     // top
-    ctx.fillText(playersPool.players[playerIndexes["top"]].name, canvas.width / 2, 25);
+    name = playersPool.players[playerIndexes["top"]].name;
+    if (handFirstPlayer && playersPool.players[playerIndexes["top"]].id == handFirstPlayer.id) {
+        name = "-->  " + name + "  <--";
+    }
+    ctx.fillText(name, canvas.width / 2, 25);
 
     // left
+    name = playersPool.players[playerIndexes["left"]].name;
+    if (handFirstPlayer && playersPool.players[playerIndexes["left"]].id == handFirstPlayer.id) {
+        name = "-->  " + name + "  <--";
+    }
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(Math.PI / 2);
-    ctx.fillText(playersPool.players[playerIndexes["left"]].name, 0, canvas.width / 2 - borderSeparation + 25);
+    ctx.fillText(name, 0, canvas.width / 2 - borderSeparation + 25);
     ctx.restore();
 }
 

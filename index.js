@@ -260,6 +260,7 @@ io.on('connection', function (socket) {
                 io.sockets.emit('roundDone', {
                     "currentTurnToGuessBases": game.currentRound().currentTurnToGuessBases,
                     "currentTurnToPlay": game.currentRound().currentTurnToPlay,
+                    "handFirstPlayer": game.currentRound().handFirstPlayer,
                     "game": game
                 });
             }, 9000);
