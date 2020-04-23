@@ -79,6 +79,11 @@ class Round {
     }
 
     canGuessBases(p, bases) {
+        // To avoid mistakes, let's limit the amount of bases <= the amount of cards
+        if (bases > this.cardsPerPlayer) {
+            return false;
+        }
+
         // except for last player, the other players don't have any restrictions
         if (this.playersPool.rightPlayer(p) != this.roundFirstPlayer) {
             return true
