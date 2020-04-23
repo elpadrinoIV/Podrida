@@ -238,17 +238,15 @@ io.on('connection', function (socket) {
             return;
         }
         game.currentRound().playCard(player, cardPlayed);
-        io.sockets.emit('cardPlayed', {
-            "game": game,
-            "currentTurnToPlay": game.currentRound().currentTurnToPlay
-        });
 
         if (game.currentRound().isHandDone()) {
+            game.currentRound().currentTurnToPlay = null;
             setTimeout(() => {
                 console.log("Hand Done");
                 game.currentRound().endHand();
                 io.sockets.emit('handDone', {
                     "currentTurnToPlay": game.currentRound().currentTurnToPlay,
+                    "handFirstPlayer": game.currentRound().handFirstPlayer,
                     "game": game
                 });
             }, 5000);
@@ -266,6 +264,11 @@ io.on('connection', function (socket) {
                 });
             }, 9000);
         }
+
+        io.sockets.emit('cardPlayed', {
+            "game": game,
+            "currentTurnToPlay": game.currentRound().currentTurnToPlay
+        });
     });
 
     socket.on('handDone', function (data) {
