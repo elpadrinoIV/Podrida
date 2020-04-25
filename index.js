@@ -135,6 +135,17 @@ app.get('/game/:id', function (request, response) {
             font-size: 20px;
             color: white;
         }
+
+        .askedVsCards {
+            position: absolute;
+            top: 20;
+            left: 900;
+            width: 170px;
+            height: 30px;
+            font-family: "Helvetica";
+            font-size: 30px;
+            color: white;
+        }
     </style>
     <script src="/socket.io/socket.io.js"></script>
 
@@ -143,6 +154,8 @@ app.get('/game/:id', function (request, response) {
 <body>
     <canvas id="canvas"></canvas>
     <div id="currentTurn" class="currentTurn">Turno:</div>
+    <div id="askedVsCards" class="askedVsCards"></div>
+    
     <div id="basesForm" class="container" border="1px solid black">
         <form>
         <input type="text" id="basesGuess">
@@ -215,6 +228,10 @@ io.on('connection', function (socket) {
     });
 
     socket.on('playCard', function (data) {
+        if (data.playerId == null || data.gameId == null || data.card == null) {
+            console.log("Play card with null playerId, gameId or card");
+            return;
+        }
         console.log("Player: " + data.playerId + "| Game: " + data.gameId + "| Card: " + data.card.toString());
 
         var game = games[data.gameId];

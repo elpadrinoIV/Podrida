@@ -173,10 +173,14 @@ function setCurrentTurn(game) {
 var playerCards = [];
 canvas.addEventListener('click', function (event) {
     console.log(event);
+    if (playerCards.length == 0) {
+        return;
+    }
     if (event.offsetY >= canvas.height - cardHeight - borderSeparation &&
         event.offsetY <= canvas.height - borderSeparation) {
         var totalWidth = separation * (playerCards.length - 1) + cardWidth;
         var initialDx = canvas.width / 2 - totalWidth / 2;
+
         if (event.offsetX >= initialDx && event.offsetX <= initialDx + totalWidth) {
             // Asume it's the last card and check if  it fall under the other cards
             var clickedCard = playerCards[playerCards.length - 1];
@@ -213,6 +217,7 @@ async function draw(game) {
 
     drawPlayers(game.playersPool);
     drawBases(game.playersPool);
+    drawBasesAskedVsCards(game);
     playerCards = game.playersPool.players[playerIndexes["bottom"]].cards;
     drawCards(game.playersPool);
     drawPlayedCards(game.playersPool);
@@ -282,6 +287,17 @@ function drawPlayers(playersPool) {
     ctx.rotate(Math.PI / 2);
     ctx.fillText(name, 0, canvas.width / 2 - borderSeparation + 25);
     ctx.restore();
+}
+
+function drawBasesAskedVsCards(game) {
+    var totalBases = game.rounds[game.rounds.length - 1].cardsPerPlayer;
+    var askedBases = 0;
+
+    for (var pIdx in playerIndexes) {
+        askedBases += game.playersPool.players[playerIndexes[pIdx]].askedBases;
+    }
+
+    document.getElementById("askedVsCards").innerHTML = askedBases + "/" + totalBases;
 }
 
 function drawBases(playersPool) {
