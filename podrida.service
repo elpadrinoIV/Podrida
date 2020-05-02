@@ -1,0 +1,11 @@
+[Unit]
+Description=Podrida
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /home/nicolasdascanio/Podrida/podrida.sh
+WorkingDirectory=/home/nicolasdascanio/Podrida
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
