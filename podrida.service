@@ -4,6 +4,7 @@ Description=Podrida
 [Service]
 Type=simple
 ExecStart=/bin/bash /home/nicolasdascanio/Podrida/podrida.sh
+Environment=PATH=/usr/local/lib/nodejs/node-v12.16.2-linux-x64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
 WorkingDirectory=/home/nicolasdascanio/Podrida
 Restart=always
 
