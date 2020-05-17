@@ -132,7 +132,7 @@ function loadGame(gId, playerId) {
     socket.on('handDone', function (data) {
         console.log("Hand done");
         currentTurnToPlay = data.currentTurnToPlay;
-        handFirstPlayer = data.handFirstPlayer;
+        //handFirstPlayer = data.handFirstPlayer;
         draw(data.game);
     });
 

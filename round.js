@@ -48,7 +48,7 @@ class Round {
         if (this.scores != null) {
             return this.scores;
         }
-        this.calculateScores()
+        this.calculateScores2()
         return this.scores();
     }
 
@@ -59,6 +59,32 @@ class Round {
             var score;
             if (p.askedBases != p.doneBases) {
                 score = p.doneBases - p.askedBases;
+            } else {
+                if (p.askedBases != this.cardsPerPlayer) {
+                    score = 10 + p.askedBases;
+                } else {
+                    score = 10 + 2 * p.askedBases;
+                }
+            }
+            scores.push({
+                "name": p.name,
+                "askedBases": p.askedBases,
+                "doneBases": p.doneBases,
+                "score": score
+            });
+            p.score += score;
+        }
+        this.scores = scores;
+        return scores;
+    }
+
+    calculateScores2() {
+        var scores = [];
+        for (var pIdx in this.playersPool.players) {
+            var p = this.playersPool.players[pIdx];
+            var score;
+            if (p.askedBases != p.doneBases) {
+                score = -Math.abs(p.doneBases - p.askedBases);
             } else {
                 if (p.askedBases != this.cardsPerPlayer) {
                     score = 10 + p.askedBases;
@@ -215,7 +241,7 @@ class Round {
 
         if (this.isRoundDone()) {
             this.currentTurnToPlay = null;
-            this.calculateScores();
+            this.calculateScores2();
         }
     }
 

@@ -31,6 +31,7 @@ var p3 = new player.Player("JULIAN", "Juli");
 var p4 = new player.Player("ALEJANDRA", "Ale");
 
 var playersPool = new player_pool.PlayersPool([p1, p2, p3, p4]);
+playersPool.shuffle();
 const games = {}
 
 games['123'] = new game.Game(playersPool);
